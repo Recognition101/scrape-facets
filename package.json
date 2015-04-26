@@ -18,7 +18,6 @@
     "email": "darklightmw@gmail.com"
   },
   "dependencies": {
-    "commander": "^2.8.1",
     "event-stream": "^3.3.0",
     "x-ray": "^1.0.5",
     "request": "^2.55.0"

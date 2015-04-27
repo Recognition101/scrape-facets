@@ -1,6 +1,6 @@
 {
   "name": "scrape-facets",
-  "description": "A simple script to download and resize all of Justin Maller's Facets wallpapers.",
+  "description": "A simple script to download all of Justin Maller's Facets wallpapers.",
   "version": "1.0.0",
   "homepage": "https://github.com/recognition101/scrape-facets",
   "keywords": [

@@ -1,48 +1,59 @@
-var fs      = require('fs');
-var path    = require('path');
-var spawn   = require('child_process').spawn;
+#!/usr/bin/env node
+/* eslint no-console:0 */
 
-var es      = require('event-stream');
-var xray    = require('x-ray');
-var request = require('request');
+const fs = require('fs').promises;
+const http = require('http');
 
-// Use X-Ray to scrape for all files
+const downloadRegex = new RegExp(
+    '<a.*href=.([^\'"]+)[^>]*>Download Wallpaper',
+    'is');
 
-es.readable(function(count, callback) {
-    console.log('[INFO] Scraping for urls...');
-
-    xray('http://www.facets.la/2014/365/')
-    .select('.print-info + .size13 a[href]')
-    .paginate('#search-box-prev a[href]')
-    .limit(365)
-    .run(function(err, picUrls) {
-        if (err) {
-            callback('[ERROR] ' + err, null);
+/**
+ * Fetches the content at a given URL and returns it as a buffer.
+ * @param {string} url the URL to download as text
+ * @return {Promise<Buffer>} a promise that resolves to the buffer content
+ */
+const fetch = url => new Promise((yes, no) => {
+    http.get(url, res => {
+        if (res.statusCode !== 200) {
+            no(new Error(`ERROR: HTTP Code ${res.statusCode} for: ${url}`));
         } else {
-            picUrls.forEach(function(item) {
-                if (item) {
-                    this.emit('data', item);
-                }
-            }.bind(this));
-
-            console.log('[INFO] Downloading images...');
-            this.emit('end');
-            callback();
+            const data = /** @type {Buffer[]} */([]);
+            res.on('data', chunk => data.push(chunk));
+            res.on('end', () => yes(Buffer.concat(data)));
         }
-    }.bind(this));
-})
+    }).on('error', err => no(err));
+});
 
+/**
+ * Downloads a facet of a given index at a given year.
+ * @param {number} year the year the facet was made
+ * @param {number} index the facet number to download
+ * @return {Promise} a promise that resolves when the image is downloaded
+ */
+const downloadImage = async (year, index) => {
+    try {
+        const fileName = `./images/${year}-${index}.jpg`;
+        const page = await fetch(`http://www.facets.la/${year}/${index}/`);
+        const url  = page.toString().match(downloadRegex);
+        if (url && url[1]) {
+            await fs.writeFile(fileName, await fetch(url[1]));
+        }
+    } catch(e) { }
+};
 
-// Download each file
+/**
+ * Downloads every facet image.
+ * @return {Promise} a promise that resolves when all facets are downloaded.
+ */
+const downloadPages = async () => {
+    for(let i=1; i < 366; i += 1) {
+        console.log(`Downloading image ${i}...`);
+        await Promise.all([
+            downloadImage(2013, i),
+            downloadImage(2014, i),
+        ]);
+    }
+};
 
-.pipe(es.map(function(url, cb) {
-    var fn = './' + path.join('./images/', path.basename(url));
-    request(url)
-    .pipe(fs.createWriteStream(fn))
-    .on('finish', function() {
-        cb(null, fn);
-    }.bind(this));
-
-}))
-.on('data', function(f) { console.log('[INFO] Downloaded ' + f); })
-.on('end',  function(a) { console.log('[INFO] Done Downloading'); });
+downloadPages();

@@ -1,14 +1,17 @@
 {
   "name": "scrape-facets",
   "description": "A simple script to download all of Justin Maller's Facets wallpapers.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "homepage": "https://github.com/recognition101/scrape-facets",
   "keywords": [
-    "x-ray",
     "scrape",
     "wallpapers",
     "Justin Maller"
   ],
+  "engines": {
+    "node": ">=10"
+  },
+  "engineStrict": true,
   "repository": {
     "type": "git",
     "url": "https://github.com/recognition101/scrape-facets"
@@ -17,11 +20,7 @@
     "name": "Recognition101",
     "email": "darklightmw@gmail.com"
   },
-  "dependencies": {
-    "event-stream": "^3.3.0",
-    "x-ray": "^1.0.5",
-    "request": "^2.55.0"
-  },
+  "dependencies": {},
   "devDependencies": {},
   "scripts": {
     "start": "node scrape-facets.js"
